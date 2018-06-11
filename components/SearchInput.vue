@@ -1,6 +1,6 @@
 <template>
   <div class="search-input">
-    <el-input v-model="q" clearable autofocus>
+    <el-input v-model="q" clearable autofocus @keyup.native.enter="submit">
     </el-input>
 
     <button :class="{'speech-toggle':true, 'search-input__speech-toggle':true, active: isSpeechRunning}" @click="speechToggle" slot="suffix">
@@ -66,6 +66,12 @@ export default {
   },
 
   methods: {
+    submit() {
+      console.log('submit');
+      this.$emit("submit", this.q)
+      this.q = '';
+    },
+
     speechStart() {
       console.log("speech start");
       if (!this.recognition) return;
@@ -89,7 +95,7 @@ export default {
 
       this.transcription.push(this.runtimeTranscription);
       this.q = this.runtimeTranscription;
-      this.$emit('speechInput', this.runtimeTranscription);
+      this.submit();
       this.speechStart();
     },
 

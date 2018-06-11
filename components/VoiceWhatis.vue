@@ -1,6 +1,11 @@
 <template>
   <div class="voice-whatis">
-    <SearchInput @input="onInput"></SearchInput>
+    <SearchInput @input="onInput" @submit="onSubmit"></SearchInput>
+
+    <div class="new-answer" v-if="question">
+      {{ question }}: <span v-if="answer">{{ answer }}</span>
+    </div>
+
     <div class="voice-whatis__answers" v-if="answers">
       <ul class="voice-whatis__answers-list answers-list" v-if="answers">
         <Answer class="answers-list__answer"
@@ -22,13 +27,24 @@
 <script>
 import SearchInput from "~/components/SearchInput";
 import Answer from "~/components/Answer";
-import {SET_ITEMS, SET_ANSWERS} from '~/store';
+import {SET_ITEMS, SET_ANSWERS, ADD_ITEM} from '~/store';
 import {testItems} from '~/store';
 import Fuse from "fuse.js";
+
+const STAGE_IDLE = 'STAGE_IDLE';
+const STAGE_WAIT_FOR_ANSWER = 'STAGE_WAIT_FOR_ANSWER';
 
 export default {
   components: {
     SearchInput, Answer
+  },
+
+  data() {
+    return {
+      stage: STAGE_IDLE,
+      question: '',
+      answer: '',
+    }
   },
 
   computed: {
@@ -43,11 +59,21 @@ export default {
   watch: {},
 
   methods: {
+    // on each
     onInput(val){
       if (val.match(/^что /)) {
         this.processQuestion(val);
+      }
+    },
+
+    onSubmit(val){
+      if (val == '' || val.match(/^отмена/)){
+        this.stage = STAGE_IDLE;
+        this.question = '';
+        this.answer = '';
       } else {
         console.log('Add new question (not impl.): ', val);
+        this.processAnswer(val);
       }
     },
 
@@ -79,6 +105,21 @@ export default {
         });
       }
       this.$store.commit(SET_ANSWERS, answers);
+    },
+
+    processAnswer(q){
+      if (this.stage == STAGE_IDLE){
+        this.question = q;
+        this.answer = '';
+        this.stage = STAGE_WAIT_FOR_ANSWER;
+      }
+      else if (this.stage == STAGE_WAIT_FOR_ANSWER){
+        this.answer = q;
+        this.$store.dispatch(ADD_ITEM, {
+          questions: [this.question],
+          answer: this.answer
+        })
+      }
     }
   },
 

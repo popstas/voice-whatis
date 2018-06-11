@@ -3,6 +3,7 @@ import pjson from "~/package.json";
 // mutations
 export const SET_ITEMS = "SET_ITEMS";
 export const SET_ANSWERS = "SET_ANSWERS";
+export const ADD_ITEM = "ADD_ITEM";
 
 export const testItems = [
   {
@@ -55,9 +56,19 @@ export const mutations = {
 
   [SET_ANSWERS](state, answers) {
     state.answers = answers;
+  },
+
+  [ADD_ITEM](state, item) {
+    console.log('add item: ', item);
+    state.items.push(item);
   }
 };
 
-export const actions = {};
+export const actions = {
+  [ADD_ITEM] ({ commit, state }, payload) {
+    console.log(payload);
+    commit(ADD_ITEM, payload);
+  }
+};
 
 export const strict = process.env.NODE_ENV !== "production";

@@ -31,6 +31,7 @@ html {
 }
 .el-main {
   padding: 5px;
+  min-height: 500px;
 }
 
 *,
