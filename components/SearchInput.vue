@@ -59,6 +59,7 @@ export default {
       transcription: [],
       volume: 0,
       audioContext: false,
+      lastInput: '',
     };
   },
 
@@ -87,9 +88,10 @@ export default {
       this.q = "";
     },
 
-    speechStart() {
+    async speechStart() {
       console.log("speech start");
       if (!this.recognition) return;
+      await this.speechStop();
       this.recognition.start();
       this.isSpeechRunning = true;
 
@@ -100,9 +102,14 @@ export default {
       );
     },
 
-    speechStop() {
+    async speechStop() {
+      console.log('this.recognition.stop()');
       if (this.recognition) this.recognition.stop();
-      if (this.audioContext) this.audioContext.close();
+      if (this.audioContext){
+        try{
+          await this.audioContext.close();
+        } catch(err){}
+      }
       this.volume = 0;
       this.isSpeechRunning = false;
     },
@@ -111,15 +118,17 @@ export default {
       return this.isSpeechRunning ? this.speechStop() : this.speechStart();
     },
 
-    onSpeechEnd() {
+    async onSpeechEnd() {
       console.log("speech end", this.runtimeTranscription);
-      this.speechStop();
+      await this.speechStop();
       if (!this.runtimeTranscription) return;
+      if (this.runtimeTranscription == this.lastInput) return;
 
       this.transcription.push(this.runtimeTranscription);
       this.q = this.runtimeTranscription;
+      this.lastInput = this.q;
       this.submit();
-      // this.speechStart();
+      this.speechStart();
     },
 
     checkSpeechApi() {

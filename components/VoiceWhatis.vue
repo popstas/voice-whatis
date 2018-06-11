@@ -17,6 +17,8 @@
 
 <style lang="scss">
 .voice-whatis{
+  text-align: center;
+
   &__answers-list{
     padding: 0;
     text-align: center;
@@ -118,7 +120,8 @@ export default {
         this.$store.dispatch(ADD_ITEM, {
           questions: [this.question],
           answer: this.answer
-        })
+        });
+        this.stage = STAGE_IDLE;
       }
     }
   },
