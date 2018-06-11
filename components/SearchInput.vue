@@ -4,13 +4,15 @@
     </el-input>
 
     <button :class="{'speech-toggle':true, 'search-input__speech-toggle':true, active: isSpeechRunning}" @click="speechToggle" slot="suffix">
-      <icon v-if="recognition" name="microphone" class="el-icon-speech el-input__icon"></icon>
+      <icon v-if="recognition" name="microphone"
+        class="el-icon-speech el-input__icon"
+        :style="{ transform: 'scale(' + volumeScale +')' }"></icon>
     </button>
   </div>
 </template>
 
 <style lang="scss">
-.search-input{
+.search-input {
   text-align: center;
 
   &__speech-toggle {
@@ -24,6 +26,10 @@
     color: #dcdfe6;
     outline: none;
 
+    .el-input__icon{
+      transition-duration: 0.1s;
+    }
+
     &:hover {
       color: #666;
     }
@@ -32,7 +38,6 @@
     }
   }
 }
-
 </style>
 
 <script>
@@ -51,8 +56,18 @@ export default {
       recognition: false,
       isSpeechRunning: false,
       runtimeTranscription: "",
-      transcription: []
+      transcription: [],
+      volume: 0,
+      audioContext: false,
     };
+  },
+
+  computed: {
+    volumeScale(){
+      let vol = this.volume
+      if (this.volume < 0.01) vol = 0;
+      return Math.min(1.5, 1 + vol * 10);
+    }
   },
 
   watch: {
@@ -67,9 +82,9 @@ export default {
 
   methods: {
     submit() {
-      console.log('submit');
-      this.$emit("submit", this.q)
-      this.q = '';
+      console.log("submit");
+      this.$emit("submit", this.q);
+      this.q = "";
     },
 
     speechStart() {
@@ -77,10 +92,18 @@ export default {
       if (!this.recognition) return;
       this.recognition.start();
       this.isSpeechRunning = true;
+
+      // volume listener, https://github.com/cwilso/volume-meter/blob/master/volume-meter.js
+      navigator.getUserMedia({ video: false, audio: true },
+        this.onGetUserMedia,
+        err => reject(err)
+      );
     },
 
     speechStop() {
-      if(this.recognition) this.recognition.stop();
+      if (this.recognition) this.recognition.stop();
+      if (this.audioContext) this.audioContext.close();
+      this.volume = 0;
       this.isSpeechRunning = false;
     },
 
@@ -96,7 +119,7 @@ export default {
       this.transcription.push(this.runtimeTranscription);
       this.q = this.runtimeTranscription;
       this.submit();
-      this.speechStart();
+      // this.speechStart();
     },
 
     checkSpeechApi() {
@@ -109,23 +132,92 @@ export default {
       let recognition = this.recognition;
       this.speechStop();
       recognition.lang = this.lang;
-      recognition.interimResults = true;
+      recognition.interimResults = false;
+
       recognition.addEventListener("result", event => {
-        // console.log("speech result", event.results);
+        console.log("speech result", event.results);
         const text = Array.from(event.results)
           .map(result => result[0])
           .map(result => result.transcript)
           .join("");
         this.runtimeTranscription = text;
       });
+
       recognition.addEventListener("end", this.onSpeechEnd);
       this.recognition = recognition;
+    },
+
+    onGetUserMedia(stream) {
+      this.audioContext = new AudioContext();
+      let source = this.audioContext.createMediaStreamSource(stream);
+      let meter = this.createAudioMeter(this.audioContext);
+      source.connect(meter);
+    },
+
+    createAudioMeter(audioContext, clipLevel, averaging, clipLag) {
+      let processor = audioContext.createScriptProcessor(512);
+      processor.onaudioprocess = this.volumeAudioProcess;
+      processor.clipping = false;
+      processor.lastClip = 0;
+      processor.volume = 0;
+      processor.clipLevel = clipLevel || 0.98;
+      processor.averaging = averaging || 0.95;
+      processor.clipLag = clipLag || 750;
+
+      // this will have no effect, since we don't copy the input to the output,
+      // but works around a current Chrome bug.
+      processor.connect(audioContext.destination);
+
+      processor.checkClipping = function() {
+        if (!this.clipping) return false;
+        if (this.lastClip + this.clipLag < window.performance.now()) {
+          this.clipping = false;
+        }
+        return this.clipping;
+      };
+
+      processor.shutdown = function() {
+        this.disconnect();
+        this.onaudioprocess = null;
+      };
+
+      return processor;
+    },
+
+    volumeAudioProcess(event) {
+      let processor = event.target;
+      let buf = event.inputBuffer.getChannelData(0);
+      let bufLength = buf.length;
+      let sum = 0;
+      let x;
+
+      // Do a root-mean-square on the samples: sum up the squares...
+      for (let i = 0; i < bufLength; i++) {
+        x = buf[i];
+        if (Math.abs(x) >= processor.clipLevel) {
+          processor.clipping = true;
+          processor.lastClip = window.performance.now();
+        }
+        sum += x * x;
+      }
+
+      // ... then take the square root of the sum.
+      let rms = Math.sqrt(sum / bufLength);
+
+      // Now smooth this out with the averaging factor applied
+      // to the previous sample - take the max here because we
+      // want "fast attack, slow release."
+      // this.volume = Math.max(rms, this.volume * processor.averaging);
+      this.volume = rms;
     }
   },
 
   mounted() {
-    console.log('mounted');
     this.checkSpeechApi();
+  },
+
+  destroyed() {
+    this.speechStop();
   }
 };
 </script>
