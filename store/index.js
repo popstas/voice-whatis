@@ -4,6 +4,7 @@ import pjson from "~/package.json";
 export const SET_ITEMS = "SET_ITEMS";
 export const SET_ANSWERS = "SET_ANSWERS";
 export const ADD_ITEM = "ADD_ITEM";
+export const DELETE_ITEM = "DELETE_ITEM";
 
 export const testItems = [
   {
@@ -61,14 +62,16 @@ export const mutations = {
   [ADD_ITEM](state, item) {
     console.log('add item: ', item);
     state.items.push(item);
+  },
+
+  [DELETE_ITEM](state, item) {
+    console.log('delete item: ', item);
+    const i = state.items.indexOf(item)
+    state.items.splice(i, 1)
   }
 };
 
 export const actions = {
-  [ADD_ITEM] ({ commit, state }, payload) {
-    console.log(payload);
-    commit(ADD_ITEM, payload);
-  }
 };
 
 export const strict = process.env.NODE_ENV !== "production";

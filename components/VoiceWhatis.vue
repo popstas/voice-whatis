@@ -29,7 +29,7 @@
 <script>
 import SearchInput from "~/components/SearchInput";
 import Answer from "~/components/Answer";
-import {SET_ITEMS, SET_ANSWERS, ADD_ITEM} from '~/store';
+import {SET_ITEMS, SET_ANSWERS, ADD_ITEM, DELETE_ITEM} from '~/store';
 import {testItems} from '~/store';
 import Fuse from "fuse.js";
 
@@ -46,6 +46,7 @@ export default {
       stage: STAGE_IDLE,
       question: '',
       answer: '',
+      lastAddedItem: {}
     }
   },
 
@@ -69,10 +70,17 @@ export default {
     },
 
     onSubmit(val){
-      if (val == '' || val.match(/^отмена/)){
+      if (val.match(/^что /)){
+        this.processQuestion(val);
+      } else if (val == '' || val.match(/^отмена/)){
         this.stage = STAGE_IDLE;
         this.question = '';
         this.answer = '';
+      } else if (val.match(/^удалить/)){
+        this.stage = STAGE_IDLE;
+        this.question = '';
+        this.answer = '';
+        this.$store.commit(DELETE_ITEM, this.lastAddedItem);
       } else {
         console.log('Add new question (not impl.): ', val);
         this.processAnswer(val);
@@ -117,10 +125,11 @@ export default {
       }
       else if (this.stage == STAGE_WAIT_FOR_ANSWER){
         this.answer = q;
-        this.$store.dispatch(ADD_ITEM, {
+        this.lastAddedItem = {
           questions: [this.question],
           answer: this.answer
-        });
+        };
+        this.$store.commit(ADD_ITEM, this.lastAddedItem);
         this.stage = STAGE_IDLE;
       }
     }
