@@ -10,6 +10,15 @@
   </div>
 </template>
 
+<style lang="scss">
+.voice-whatis{
+  &__answers-list{
+    padding: 0;
+    text-align: center;
+  }
+}
+</style>
+
 <script>
 import SearchInput from "~/components/SearchInput";
 import Answer from "~/components/Answer";
@@ -46,6 +55,7 @@ export default {
       q = q.replace(/^что /, '');
       console.log('processQuestion: ', q);
       let fuse = new Fuse(this.items, {
+        includeScore: true,
         keys: [
           {
             name: "questions",
@@ -58,6 +68,16 @@ export default {
         ]
       });
       let answers = fuse.search(q);
+      if(answers.length > 0){
+        const bestScore = answers[0].score;
+        const scoreThreshold = 10;
+        answers = answers.map(answer => {
+          return {...answer.item, ...{
+            score: answer.score,
+            minor: answer.score / bestScore > scoreThreshold,
+          }};
+        });
+      }
       this.$store.commit(SET_ANSWERS, answers);
     }
   },
