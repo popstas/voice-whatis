@@ -106,7 +106,7 @@ export default {
       let answers = fuse.search(q);
       if(answers.length > 0){
         const bestScore = answers[0].score;
-        const scoreThreshold = 10;
+        const scoreThreshold = 2;
         answers = answers.map(answer => {
           return {...answer.item, ...{
             score: answer.score,
