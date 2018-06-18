@@ -1,36 +1,36 @@
-import pjson from "~/package.json";
+import pjson from '~/package.json';
 
 // mutations
-export const SET_ITEMS = "SET_ITEMS";
-export const SET_ANSWERS = "SET_ANSWERS";
-export const ADD_ITEM = "ADD_ITEM";
-export const DELETE_ITEM = "DELETE_ITEM";
+export const SET_ITEMS = 'SET_ITEMS';
+export const SET_ANSWERS = 'SET_ANSWERS';
+export const ADD_ITEM = 'ADD_ITEM';
+export const DELETE_ITEM = 'DELETE_ITEM';
 
 export const testItems = [
   {
     id: 1,
-    questions: ["в желто-зеленом"],
-    answer: "бабл гам"
+    questions: ['в желто-зеленом'],
+    answer: 'бабл гам'
   },
   {
     id: 2,
-    questions: ["в синем", "в голубом"],
-    answer: "возможно арбуз"
+    questions: ['в синем', 'в голубом'],
+    answer: 'возможно арбуз'
   },
   {
     id: 3,
-    questions: ["в черном"],
-    answer: "возможно mix aurora"
+    questions: ['в черном'],
+    answer: 'возможно mix aurora'
   },
   {
     id: 4,
-    questions: ["в красном"],
-    answer: "гранат"
+    questions: ['в красном'],
+    answer: 'гранат'
   },
   {
     id: 5,
-    questions: ["в белом"],
-    answer: "кофе"
+    questions: ['в белом'],
+    answer: 'кофе'
   }
 ];
 
@@ -66,12 +66,11 @@ export const mutations = {
 
   [DELETE_ITEM](state, item) {
     console.log('delete item: ', item);
-    const i = state.items.indexOf(item)
-    state.items.splice(i, 1)
+    const i = state.items.indexOf(item);
+    state.items.splice(i, 1);
   }
 };
 
-export const actions = {
-};
+export const actions = {};
 
-export const strict = process.env.NODE_ENV !== "production";
+export const strict = process.env.NODE_ENV !== 'production';

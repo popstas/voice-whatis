@@ -14,28 +14,28 @@
 </template>
 
 <style lang="scss">
-.answer{
-  &_minor{
+.answer {
+  &_minor {
     opacity: 0.3;
 
-    &:hover{
+    &:hover {
       opacity: 1;
     }
   }
 
-  &__score{
+  &__score {
     color: #666;
   }
 
-  &__answer{
+  &__answer {
     margin: 15px auto;
     font-size: 24px;
   }
 
-  &__questions{
+  &__questions {
     list-style: none;
     padding: 0;
-    &-item{
+    &-item {
       color: #999;
     }
   }
@@ -44,6 +44,6 @@
 
 <script>
 export default {
-  props: ["answer"]
-}
+  props: ['answer']
+};
 </script>

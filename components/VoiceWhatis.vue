@@ -16,10 +16,10 @@
 </template>
 
 <style lang="scss">
-.voice-whatis{
+.voice-whatis {
   text-align: center;
 
-  &__answers-list{
+  &__answers-list {
     padding: 0;
     text-align: center;
   }
@@ -27,18 +27,19 @@
 </style>
 
 <script>
-import SearchInput from "~/components/SearchInput";
-import Answer from "~/components/Answer";
-import {SET_ITEMS, SET_ANSWERS, ADD_ITEM, DELETE_ITEM} from '~/store';
-import {testItems} from '~/store';
-import Fuse from "fuse.js";
+import SearchInput from '~/components/SearchInput';
+import Answer from '~/components/Answer';
+import { SET_ITEMS, SET_ANSWERS, ADD_ITEM, DELETE_ITEM } from '~/store';
+import { testItems } from '~/store';
+import Fuse from 'fuse.js';
 
 const STAGE_IDLE = 'STAGE_IDLE';
 const STAGE_WAIT_FOR_ANSWER = 'STAGE_WAIT_FOR_ANSWER';
 
 export default {
   components: {
-    SearchInput, Answer
+    SearchInput,
+    Answer
   },
 
   data() {
@@ -47,14 +48,14 @@ export default {
       question: '',
       answer: '',
       lastAddedItem: {}
-    }
+    };
   },
 
   computed: {
-    items(){
+    items() {
       return this.$store.state.items;
     },
-    answers(){
+    answers() {
       return this.$store.state.answers;
     }
   },
@@ -63,20 +64,20 @@ export default {
 
   methods: {
     // on each
-    onInput(val){
+    onInput(val) {
       if (val.match(/^что /)) {
         this.processQuestion(val);
       }
     },
 
-    onSubmit(val){
-      if (val.match(/^что /)){
+    onSubmit(val) {
+      if (val.match(/^что /)) {
         this.processQuestion(val);
-      } else if (val == '' || val.match(/^отмена/)){
+      } else if (val == '' || val.match(/^отмена/)) {
         this.stage = STAGE_IDLE;
         this.question = '';
         this.answer = '';
-      } else if (val.match(/^удалить/)){
+      } else if (val.match(/^удалить/)) {
         this.stage = STAGE_IDLE;
         this.question = '';
         this.answer = '';
@@ -87,43 +88,45 @@ export default {
       }
     },
 
-    processQuestion(q){
+    processQuestion(q) {
       q = q.replace(/^что /, '');
       console.log('processQuestion: ', q);
       let fuse = new Fuse(this.items, {
         includeScore: true,
         keys: [
           {
-            name: "questions",
+            name: 'questions',
             weight: 0.7
           },
           {
-            name: "answer",
+            name: 'answer',
             weight: 0.1
           }
         ]
       });
       let answers = fuse.search(q);
-      if(answers.length > 0){
+      if (answers.length > 0) {
         const bestScore = answers[0].score;
         const scoreThreshold = 2;
         answers = answers.map(answer => {
-          return {...answer.item, ...{
-            score: answer.score,
-            minor: answer.score / bestScore > scoreThreshold,
-          }};
+          return {
+            ...answer.item,
+            ...{
+              score: answer.score,
+              minor: answer.score / bestScore > scoreThreshold
+            }
+          };
         });
       }
       this.$store.commit(SET_ANSWERS, answers);
     },
 
-    processAnswer(q){
-      if (this.stage == STAGE_IDLE){
+    processAnswer(q) {
+      if (this.stage == STAGE_IDLE) {
         this.question = q;
         this.answer = '';
         this.stage = STAGE_WAIT_FOR_ANSWER;
-      }
-      else if (this.stage == STAGE_WAIT_FOR_ANSWER){
+      } else if (this.stage == STAGE_WAIT_FOR_ANSWER) {
         this.answer = q;
         this.lastAddedItem = {
           questions: [this.question],
@@ -135,8 +138,8 @@ export default {
     }
   },
 
-  mounted(){
+  mounted() {
     this.$store.commit(SET_ITEMS, testItems);
   }
-}
+};
 </script>
